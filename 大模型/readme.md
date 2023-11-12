@@ -376,7 +376,11 @@ LoRA 的优势有以下三点：
 
 
 <div align=center>
+<<<<<<< HEAD
+<img src="./imgs/1.5.16.jpg" width="1200" height="800">
+=======
 <img src="./imgs/1.5.16.jpg" width="1200" height="400">
+>>>>>>> 9daed71ac28b7b8ceeba240f9d7369ed579fd330
 </div>
 <div align=center>图16.多提示学习 </div>
 
@@ -397,7 +401,11 @@ LoRA 的优势有以下三点：
 
 
 <div align=center>
+<<<<<<< HEAD
+<img src="./imgs/1.5.17.jpg" width="1200" height="800">
+=======
 <img src="./imgs/1.5.17.jpg" width="1200" height="400">
+>>>>>>> 9daed71ac28b7b8ceeba240f9d7369ed579fd330
 </div>
 <div align=center>图17.上下文学习 </div>
 
@@ -459,7 +467,11 @@ Google在2022年提出了思维链的概念，用于提高大语言模型执行�
 如图所示，思维链提示模板与标准提示模板的区别就是在上下文学习时，给出的演示样例不仅包括问题和答案，还包括推理依据，并且在大语言模型预测过程中，并非直接给出答案结果，而是先给出问题对应的解题步骤，再推导出答案内容。思维链类似于一个解决方案，捕捉模型推理的一步步思考逻辑以找到答案。
 
 <div align=center>
+<<<<<<< HEAD
+<img src="./imgs/1.5.18.jpg" width="1200" height="800">
+=======
 <img src="./imgs/1.5.18.jpg" width="1200" height="400">
+>>>>>>> 9daed71ac28b7b8ceeba240f9d7369ed579fd330
 </div>
 <div align=center>图18.标准提示模板与思维链提示模板 </div>
 
@@ -468,7 +480,11 @@ Google在2022年提出了思维链的概念，用于提高大语言模型执行�
 
 
 <div align=center>
+<<<<<<< HEAD
+<img src="./imgs/1.5.19.jpg" width="1200" height="800">
+=======
 <img src="./imgs/1.5.19.jpg" width="1200" height="400">
+>>>>>>> 9daed71ac28b7b8ceeba240f9d7369ed579fd330
 </div>
 <div align=center>图19.自我一致思维链方法 </div>
 
@@ -480,7 +496,11 @@ Google在2022年提出了思维链的概念，用于提高大语言模型执行�
 
 
 <div align=center>
+<<<<<<< HEAD
+<img src="./imgs/1.5.20.jpg" width="1200" height="800">
+=======
 <img src="./imgs/1.5.20.jpg" width="1200" height="400">
+>>>>>>> 9daed71ac28b7b8ceeba240f9d7369ed579fd330
 </div>
 <div align=center>图20.零样本思维链方法 </div>
 
@@ -488,7 +508,3 @@ Google在2022年提出了思维链的概念，用于提高大语言模型执行�
 自动思维链方法通过对测试集样本生成思维链及采样，将多个演示样例加入提示模板，减轻思维链的错误级联效应。即使多个演示样例中存在一两个错误的思维链，也不影响整个语言模型推理过程。如图所示，首先对测试集中所有的问题进行聚类操作，得出的每个簇代表一类问题。其次，选取簇中心的问题作为簇代表，对问题进行思维链内容生成。与零样本思维链方法一致，通过“让我们一步一步来思考”模板自动生成思维链。然后，将所选取的问题及思维链内容作为演示样例构建提示模板。最后，通过大语言模型获取真实结果，包括实际问题的思维链和答案内容。生成思维链时可能出现逻辑错误，选择问题聚类后各个簇中心的问题，可以增加样例的多样性，防止选取的演示样例均为模型不擅长的问题，减轻零样本思维链方法中的思维链错误带来的影响。
 
 
-<div align=center>
-<img src="./imgs/1.5.21.jpg" width="1200" height="400">
-</div>
-<div align=center>图21.自动思维链方法 </div>
