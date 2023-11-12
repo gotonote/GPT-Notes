@@ -376,7 +376,11 @@ LoRA 的优势有以下三点：
 
 
 <div align=center>
+<<<<<<< HEAD
 <img src="./imgs/1.5.16.jpg" width="1200" height="800">
+=======
+<img src="./imgs/1.5.16.jpg" width="1200" height="400">
+>>>>>>> 9daed71ac28b7b8ceeba240f9d7369ed579fd330
 </div>
 <div align=center>图16.多提示学习 </div>
 
@@ -397,7 +401,11 @@ LoRA 的优势有以下三点：
 
 
 <div align=center>
+<<<<<<< HEAD
 <img src="./imgs/1.5.17.jpg" width="1200" height="800">
+=======
+<img src="./imgs/1.5.17.jpg" width="1200" height="400">
+>>>>>>> 9daed71ac28b7b8ceeba240f9d7369ed579fd330
 </div>
 <div align=center>图17.上下文学习 </div>
 
@@ -459,7 +467,11 @@ Google在2022年提出了思维链的概念，用于提高大语言模型执行�
 如图所示，思维链提示模板与标准提示模板的区别就是在上下文学习时，给出的演示样例不仅包括问题和答案，还包括推理依据，并且在大语言模型预测过程中，并非直接给出答案结果，而是先给出问题对应的解题步骤，再推导出答案内容。思维链类似于一个解决方案，捕捉模型推理的一步步思考逻辑以找到答案。
 
 <div align=center>
+<<<<<<< HEAD
 <img src="./imgs/1.5.18.jpg" width="1200" height="800">
+=======
+<img src="./imgs/1.5.18.jpg" width="1200" height="400">
+>>>>>>> 9daed71ac28b7b8ceeba240f9d7369ed579fd330
 </div>
 <div align=center>图18.标准提示模板与思维链提示模板 </div>
 
@@ -468,7 +480,11 @@ Google在2022年提出了思维链的概念，用于提高大语言模型执行�
 
 
 <div align=center>
+<<<<<<< HEAD
 <img src="./imgs/1.5.19.jpg" width="1200" height="800">
+=======
+<img src="./imgs/1.5.19.jpg" width="1200" height="400">
+>>>>>>> 9daed71ac28b7b8ceeba240f9d7369ed579fd330
 </div>
 <div align=center>图19.自我一致思维链方法 </div>
 
@@ -480,7 +496,11 @@ Google在2022年提出了思维链的概念，用于提高大语言模型执行�
 
 
 <div align=center>
+<<<<<<< HEAD
 <img src="./imgs/1.5.20.jpg" width="1200" height="800">
+=======
+<img src="./imgs/1.5.20.jpg" width="1200" height="400">
+>>>>>>> 9daed71ac28b7b8ceeba240f9d7369ed579fd330
 </div>
 <div align=center>图20.零样本思维链方法 </div>
 
