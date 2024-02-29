@@ -197,3 +197,56 @@ chain=LLMchain(
 
 
 将subject的值设为ice cream flavors，然后调用prompt.format(subject="ice cream flavors")方法，返回一个完整的提示词字符串，包含指导模型产生5种冰淇淋口味的指令。导入LLMChain链组件，将PromptTemplate类实例化后的对象传入LLMChain链：output=chain("ice cream flavors")。运行这个链得到的是一个JSON对象，output['text']是模型回答的字符串，然后调用输出解析器的parse()方法将这个字符串解析为一个列表。
+
+
+## 6.1.2 数据连接
+
+
+由于GPT4的数据集只训练到2023年4月份，这个时间之后的数据并没有被模型学习和理解。这是因为模型在训练数据集之外的知识领域中，其预测能力是有限的。连接外部数据不仅可以填补大模型语言的知识缺失，而且还能让开发的应用程序更加可靠。大语言模型不仅需要连接外部的数据，填补缺失知识，同时还受到提示词的限制。构建好的提示词模板需要依靠外部数据，然而提示词的字符数量是有限的，这就是max token概念。为了解决大语言模型的这些限制问题，langchain设计了数据连接模块，目的是检索与用户输入的问题相关的外部数据，包括筛选相关问题和文档。然后这些相关数据会形成提示词模板，提交给LLM或Chat Model类型的模型包装器。数据连接模块还提供了一系列内置的文档转换器，这些文档转换器可以对文档进行切割、组合、过滤等操作。
+
+
+### 6.1.2.1 LEDVR工作流
+
+
+数据连接模块是一个多功能的数据增强集成工具，可称作LEDVR。其中，L代表加载器(Loader)、E代表嵌入模型包装器(Text Embedding Model)、D代表文档转换器(Document Transformers)、V代表向量存储库(VectorStore)、R代表检索器(Retriever)。加载器负责从各种来源加载数据作为文档，其中文档是由文本和相关元数据组成的。嵌入模型包装器是一个专为与各种文本嵌入模型交互而设计的类。文档转换器主要用来对文档进行切割、组合、过滤等各种转换，目的是将加载的文档转换为可被嵌入模型包装器操作的文档数据格式。向量存储库是用于存储和检索嵌入向量的工具，处理的数据是通过模型平台的文本嵌入模型转换的向量数据。向量存储库负责存储嵌入数据并执行向量检索。在检索时，可以嵌入非结构化查询，以检索与嵌入数据“最相似”的嵌入向量。检索器是一个接口，返回非结构化查询的文档。下面通过示例解析langchain数据处理流程的各个步骤：
+
+
+首先使用加载器，创建一个WebBaseLoader实例，用于从网络加载数据，文档加载器读取该网址的内容并转换为一份文档数据。
+```python
+from langchain.document_loader import WebBaseLoader
+loader=WebBaseLoader("http://xxx.html")
+data=loader.load()
+```
+
+
+随后使用嵌入模型包装器，将这些切割后的文本数据转换为向量数据。创建一个OpenAIEmbeddings实例，用于将文本转换为向量。
+```python
+from langchain.embeddings.openai import OpenAIEmbeddings
+embedding=OpenAIEmbeddings(openai_api_key="填入密钥")
+```
+
+
+接下来，使用文档转换器，将数据切割成小块，然后转换为文档格式的数据，这是为了让数据更好地适应数据连接模块的工作流程。创建一个RecursiveCharacterTextSplitter实例作为切割工具，并指定每个片段500个字符将数据切割成多个片段。
+```python
+from langchain.text_splitter import RecursiveCharacterTextSplitter
+text_splitter=RecursiveCharacterTextSplitter(chunk_size=500,chunk_overlap=0)
+splits=text_splitter.split_document(data)
+```
+
+
+然后，进入工作流的向量存储库环节，创建一个向量存储库：FAISS实例，用于存储这些向量数据。
+```python
+from langchain.vectorstores import FAISS
+vectordb=FAISS.from_documents(document=splits,embedding=embedding)
+```
+
+
+最后实例化一个检索器，在这些数据中进行检索。创建一个ChatOpenAI实例和一个MultiQueryRetriever实例，用于执行检索问答。下例使用相似度查询方法get_relevant_documents进行检索。
+```python
+from langchain.chat_models import ChatOpenAI
+from langchain.retrievers.multi_query import MultiQueryRetriever
+question="1+1"
+llm=ChatOpenAI(openai_api_key="密钥")
+retriever_from_llm=MultiQueryRetriever.from_llm(retriever=vectordb.as_retriever(),llm=llm)
+docs=retriever_from_llm.get_relevant_documents(question)
+```
