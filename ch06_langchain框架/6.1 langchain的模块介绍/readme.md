@@ -250,3 +250,65 @@ llm=ChatOpenAI(openai_api_key="密钥")
 retriever_from_llm=MultiQueryRetriever.from_llm(retriever=vectordb.as_retriever(),llm=llm)
 docs=retriever_from_llm.get_relevant_documents(question)
 ```
+
+
+## 6.1.3 链
+
+
+### 6.1.3.1 基础链
+
+
+链是连接组件、管理组件数据流的包装器。基础链的类型有四种：LLM链(LLMChain)、路由器链(RouterChain)、顺序链(Sequential Chain)和转换链(Transformation Chain)：
+- LLM链由提示词模板和模型包装器组成。它使用提供的输入键值格式化提示词模板，然后将格式化的字符串传递给LLM模型包装器，并返回LLM模型包装器的输出。
+- 路由器链是一种使用路由器创建的链，它可以动态地选择给定输入的下一条链。路由器链由两部分组成：路由器链本身(负责选择要调用的下一条链)和目标链(路由器链可以路由到的链)。
+- 顺序链在调用语言模型后的下一步使用，适合将一次调用的输出作为另一次调用的输入的场景。顺序链有两种类型：SimpleSequentialChain(每一步都有一个单一的输入/输出，一个步骤的输出是下一个步骤的输入)和SequentialChain(允许多个输入/输出)。
+- 转换链是一个用于数据转换的链，开发者可以自定义transform函数来执行任何数据转换逻辑。这个函数接受一个字典(其键由input_variables指定)作为参数并返回另一个字典(其键由output_variables指定)。
+
+
+以下分别是LLM链、路由器链和顺序链的示例代码：
+```python
+from langchain.chains import LLMchain
+chat=ChatOpenAI(temperature=0)#temperature位于0和1之间，越大则输出越有多样性
+prompt_template="a {adjective} joke"
+llm_chain=LLMChain(llm=chat,prompt=PromptTemplate.from_template(prompt_template))
+llm_chain(inputs={"adjective":"corny"})
+```
+
+
+```python
+from langchain.chains.router.llm_router import LLMRouterChain
+router_chain=LLMRouterChain.from_llm(llm,router_prompt)
+```
+
+
+```python
+from langchain.chains import SimpleSequentialChain,SequentialChain
+full_chain=SimpleSequentialChain(chains=[fact_extraction_chain,invest_update_chain],verbose=True)
+response=full_chain.run(article)
+```
+
+
+### 6.1.3.2 工具链
+
+
+在Langchain中，链是由一系列工具链构成的，每一个工具都可以视为整个链中的一个环节。在工具链中，一个链的输出将成为下一个链的输入，形成了一个输入/输出的范式流程。下面是几个常见的工具链：
+- APIChain使得大语言模型可以与API进行交互，以获取相关的信息。
+- ConversationalRetrievalQA链在问答链的基础上提供了一个聊天历史组件。它首先将聊天历史(明确传入或从提供的内存中检索)和问题合并成一个独立的问题，然后从检索器中查找相关的文档，最后将这些文档和问题传递给一个问答链用以返回响应。
+- 对于需要将多个文档进行合并的任务，可以使用文档合并链，如MapReduceDocumentsChain或StuffDocumentsChain等。
+- 专门设计用来满足特定需求的链，如ConstitutionalChain，这是一个保证大语言模型输出遵循一定规则的链，通过设定特定的原则和指导方针，使得大语言模型生成的内容符合这些原则，从而提供更受控、符合伦理和上下文的回应内容。
+
+其中，处理文档的链又包括四种：
+- Stuff链接收一组文档并将它们全部插入一个提示中，然后将该提示传递给LLM链。
+- Refine链通过遍历输入文档并迭代更新其答案来构建响应。对于每个文档，它将所有非文档输入、当前文档和最新的中间答案传递给LLM链。
+- MapReduce链首先将LLM链单独应用于每个文档(map步骤)，然后将所有新文档传递给一个单独的文档链以获得单一输出(reduce步骤)。
+- 重排链(MapRerank)与MapReduce链一样，对每一个文档运行一个初始提示的指令微调。这个初始提示不仅试图完成一个特定任务(比如回答一个问题)，也为其答案提供了一个置信度评分。然后这个得分被用来重新排序所有文档或条目。最终得分最高的响应被返回。
+
+
+工具链的使用方法通常是先使用类方法实例化，然后通过run方法调用，输出结果是一个字符串，然后将这个字符串传递给下一个链。类方法常见的有from_llm()和from_chain_type()。from_llm()方法的名称意味着实例化时，传递的LLM模型包装器在内部已被包装为LLMChain。而只有设置combine_documents_chain属性的子类时才使用from_chain_type()方法构造链，目前只有文档问答链使用这个类方法，比如load_qa_with_source_chain和load_qa_chain。下面以SQLDatabaseChain为例介绍如何使用工具链。
+```python
+from langchain import OpenAI,SQLDatabase,SQLDatabaseChain
+db=SQLDatabase.from_uri("sqlite:///../xxx.db")
+llm=OpenAI(temperature=0,verbose=True)
+db_chain=SQLDatabaseChain_from_llm(llm,db,verbose=True)
+db_chain.run("how many people are there")
+```
