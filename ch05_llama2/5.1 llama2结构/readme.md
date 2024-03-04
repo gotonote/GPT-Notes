@@ -38,7 +38,7 @@ class LlamaRMSNorm(nn.Module):
 ## 5.1.2 SwiGLU激活函数
 
 
-在llama2中，全连接层使用带有SwiGLU激活函数的FFN的计算公式如下：$ FFN_{SwiGLU}(x,W,V,W_2)=SwiGLU(x,W,V)W_2,SwiGLU(x,W,V)=Swish_β(xW) \otimes xV,Swish_β(x)=xσ(βx)$ 。Swish激活函数中取β=1即是SiLU函数，部分llama2模型实现例如transformers库中，Swish激活函数被SiLU激活函数代替。
+在llama2中，全连接层使用带有SwiGLU激活函数的FFN的计算公式如下：$ FFN_{SwiGLU}(x,W,V,W_2)=SwiGLU(x,W,V)W_2,SwiGLU(x,W,V)=Swish_β(xW) \otimes xV,Swish_β(x)=xσ(βx) $ 。Swish激活函数中取β=1即是SiLU函数，部分llama2模型实现例如transformers库中，Swish激活函数被SiLU激活函数代替。
 
 
 ## 5.1.3 旋转位置编码(RoPE,Rotary Position Embedding)
@@ -47,7 +47,7 @@ class LlamaRMSNorm(nn.Module):
 旋转位置编码（Rotary Position Embedding，RoPE）是论文Roformer: Enhanced Transformer With Rotray Position Embedding 提出的一种能够将相对位置信息依赖集成到 self-attention 中并提升 transformer 架构性能的位置编码方式。LLaMA2、GLM 模型也是采用该位置编码方式。和相对位置编码相比，RoPE 具有更好的外推性(外推性是指大模型在训练时和预测时的输入长度不一致，导致模型的泛化能力下降的问题)。目前是大模型相对位置编码中应用最广的方式之一。
 
 
-首先定义一个长度为 $N$ 的输入序列为： $S_N={w_i}^N_{i=1}$ ，其中 $w_i$ 是输入序列中第 $i$ 个token，而输入序列 $S_N$ 对应的 embedding 表示为： $E_N={x_i}^N_{i=1}$ ，其中 $x_i$ 表示第 $i$ 个token $w_i$ 对应的 $d$ 维嵌入向量。接着在做 self-attention 之前，会用词嵌入向量计算 $\bm{q,k,v}$ 向量同时加入位置信息，函数公式表达如下:  $q_m=f_q(x_m,m),k_n=f_k(x_n,n),v_n=f_v(x_n,n)$ ，其中 $q_m$ 表示第 $m$ 个token对应的词向量 $\bm{x}_m$ 集成位置信息 $m$ 之后的query向量。而 $\bm{k}_n$ 和 $\bm{v}_n$ 则表示第 $n$ 个token对应的词向量 $\bm{x}_n$ 集成位置信息 $n$ 之后的key和value向量。而基于 transformer 的位置编码方法都是着重于构造一个合适的 $f\left( \bm{q},\bm{k},\bm{v} \right)$ 函数形式。
+首先定义一个长度为 $N$ 的输入序列为： $S_N={w_i}^N_{i=1}$ ，其中 $w_i$ 是输入序列中第 $i$ 个token，而输入序列 $S_N$ 对应的 embedding 表示为： $E_N={x_i}^N_{i=1}$ ，其中 $x_i$ 表示第 $i$ 个token $w_i$ 对应的 $d$ 维嵌入向量。接着在做 self-attention 之前，会用词嵌入向量计算 $ \bm{q,k,v} $ 向量同时加入位置信息，函数公式表达如下:  $ q_m=f_q(x_m,m),k_n=f_k(x_n,n),v_n=f_v(x_n,n) $ ，其中 $q_m$ 表示第 $m$ 个token对应的词向量 $ \bm{x}_m $ 集成位置信息 $m$ 之后的query向量。而 $ \bm {k}_n $ 和 $\bm{v}_n$ 则表示第 $n$ 个token对应的词向量 $ \bm{x}_n $ 集成位置信息 $ n $ 之后的key和value向量。而基于 transformer 的位置编码方法都是着重于构造一个合适的 $f\left( \bm{q} , \bm{k}, \bm{v} \right) $ 函数形式。
 
 
 为了能利用上token之间的相对位置信息，假定query向量 $\bm{q}_m$ 和key向量 $\bm{k}_n$ 之间的内积操作可以被一个函数 $g$ 表示，该函数 $g$ 的输入是词嵌入向量 $\bm{x}_m, \bm{x}_n$ 和它们之间的相对位置 $m-n$ ：$<f_q(x_m,m),f_k(x_n,n)>=g(x_m,x_n,x-n)$ ，接下来的目标就是找到一个等价的位置编码方式，从而使得上述关系成立。假定现在词嵌入向量的维度是2维 (d=2) ，这样就可以利用上2维平面上的向量的几何性质。llama2论文中提出了一个满足上述关系的 $f$ 和 $g$ 的形式如下： $f_q(x_m,m)=(W_qx_m)e^{imθ}，f_k(x_n,n)=(W_kx_n)e^{inθ} ，g(x_m,x_n,m-n)=Re[(W_qx_m)(W_kx_n)^{*}e^{i(m-n)θ}]$ ，这里面 $Re$ 表示复数的实部，*表示共轭复数。
