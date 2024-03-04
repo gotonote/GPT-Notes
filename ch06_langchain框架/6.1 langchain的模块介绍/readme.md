@@ -312,3 +312,9 @@ llm=OpenAI(temperature=0,verbose=True)
 db_chain=SQLDatabaseChain_from_llm(llm,db,verbose=True)
 db_chain.run("how many people are there")
 ```
+
+
+## 6.1.4 记忆模块
+
+
+人们希望聊天机器人在对话过程中理解对话，记住对话内容，理解情绪和需求，这需要赋予大语言模型一种记忆功能。大模型的记忆模块是一个集合体，由多个不同的记忆组件构成，每个记忆组件都负责某一特定方面的记忆功能。
