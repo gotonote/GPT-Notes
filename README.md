@@ -161,7 +161,7 @@ git push origin main
 
 ## 📞 联系我们
 
-- 📧 Email: contact@gptonote.ai
+- 📧 Email: 931531133@qq.com
 - 🌐 Website: https://gptonote.ai
 - 💬 Discord: [加入讨论](https://discord.gg/xxx)
 
