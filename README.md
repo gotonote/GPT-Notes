@@ -5,13 +5,10 @@
 ![License](https://img.shields.io/badge/license-MIT-blue.svg)
 ![Stars](https://img.shields.io/github/stars/gotonote/GPT-Notes?style=social)
 ![Last Commit](https://img.shields.io/github/last-commit/gotonote/GPT-Notes)
-![Contributors](https://img.shields.io/github/contributors/gotonote/GPT-Notes)
 
 **简体中文** | [English](./README_EN.md)
 
 ---
-
-![封面](./imgs/cover.png)
 
 *系统学习大模型，从入门到实战*
 
@@ -21,98 +18,48 @@
 
 ## 📖 简介
 
-GPT-Notes 是一个全面的大模型学习笔记项目，旨在帮助开发者系统学习 LLMs（大型语言模型）相关知识。
+GPT-Notes 是一个由浅入深的大模型学习笔记项目，帮助开发者系统掌握 LLMs 相关知识。
 
 > ⚡ **持续更新中** - 欢迎 Star & Fork ⭐
 
 ---
 
-## 🗂️ 目录结构
+## 🗂️ 目录结构（由浅入深）
 
 ```
 GPT-Notes/
-├── ch00_前沿/                      # 大模型最新动态
-├── ch01_预训练语言模型/             # Transformer/BERT/GPT
-├── ch02_Prompt-Tuning的定义/        # Prompt 基础
-├── ch03_Prompt-Tuning的研究进展/    # P-tuning/Prefix-tuning
-├── ch04_Prompt-Tuning的本质/        # 提示学习本质
-├── ch05_llama2/                     # LLaMA 系列
-├── ch06_langchain框架/              # LangChain 开发
-├── ch07_Fine-tuning技术/            # LoRA/QLoRA/DeepSpeed
-├── ch08_RAG技术/                    # RAG 检索增强
-├── ch09_部署与推理/                 # vLLM/LMDeploy/量化
-├── ch10_行业应用/                   # 智能客服/医疗/教育
-└── 06_实战案例/                     # 实战项目
+├── 01_入门指引/      # 什么是大模型、术语科普、发展历程
+├── 02_基础概念/      # 基本术语、核心概念
+├── 03_技术原理/      # Transformer、注意力机制、模型架构
+├── 04_训练方法/      # 预训练、微调、RLHF、对齐技术
+├── 05_提示工程/      # Prompt设计、技巧、最佳实践
+├── 06_工具实践/      # API调用、SDK使用、环境配置
+├── 07_微调实战/      # LoRA、QLoRA、微调实战案例
+├── 08_RAG技术/       # 检索增强生成、知识库搭建
+├── 09_部署推理/      # 模型部署、量化、推理优化
+├── 10_前沿动态/      # 最新模型发布、行业新闻
+├── 11_资源汇总/      # 工具推荐、论文精选、开源项目
+└── 12_应用案例/      # 实际应用场景、案例分析
 ```
 
 ---
 
 ## 📚 学习路径
 
-```mermaid
-graph LR
-    A[基础概念] --> B[Transformer]
-    B --> C[BERT/GPT]
-    C --> D[Prompt工程]
-    D --> E[Fine-tuning]
-    E --> F[RAG]
-    F --> G[部署推理]
-    G --> H[行业应用]
-    H --> I[实战项目]
-```
-
-| 阶段 | 内容 | 建议时长 |
-|------|------|----------|
-| 1️⃣ 基础 | Transformer/BERT/GPT | 1周 |
-| 2️⃣ 进阶 | Prompt/LangChain | 1周 |
-| 3️⃣ 深入 | Fine-tuning/RAG | 2周 |
-| 4️⃣ 实战 | 部署/行业应用 | 2周 |
-
----
-
-## 🔥 核心内容
-
-### 📌 预训练语言模型
-- Transformer 架构详解
-- BERT 模型原理与实战
-- GPT 系列演进 (GPT-1 → GPT-4)
-
-### 📌 Prompt 工程
-- Prompt 设计原则
-- Chain-of-Thought
-- Few-shot Learning
-- P-tuning / Prefix-tuning
-
-### 📌 Fine-tuning
-- LoRA 原理与实现
-- QLoRA 高效微调
-- DeepSpeed 分布式训练
-
-### 📌 RAG 技术
-- 向量数据库 (Chroma/FAISS/Milvus)
-- 文档加载与分割
-- 检索算法与重排序
-
-### 📌 部署与推理
-- vLLM 高效推理
-- LMDeploy 部署
-- 模型量化 (GPTQ/AWQ/GGUF)
-
-### 📌 行业应用
-- 智能客服机器人
-- 医疗健康 AI
-- 教育培训助手
-
----
-
-## 🛠️ 实战案例
-
-| 项目 | 描述 | 技术栈 |
-|------|------|--------|
-| 🤖 智能客服 | 基于 LLM 的客服系统 | LangChain + RAG |
-| 📄 文档问答 | 企业知识库问答 | Embedding + Vector DB |
-| 🧠 AI Agent | 自主智能体开发 | LangGraph + Tools |
-| 💼 RAG 企业知识库 | 完整 RAG 实战 | Milvus + LlamaIndex |
+| 阶段 | 目录 | 内容 |
+|------|------|------|
+| 入门 | 01_入门指引 | 什么是大模型、发展历程 |
+| 基础 | 02_基础概念 | 基本术语、核心概念 |
+| 进阶 | 03_技术原理 | Transformer、注意力机制 |
+| 深入 | 04_训练方法 | 预训练、微调、RLHF |
+| 实践 | 05_提示工程 | Prompt设计技巧 |
+| 实践 | 06_工具实践 | API调用、SDK |
+| 实战 | 07_微调实战 | LoRA、QLoRA |
+| 实战 | 08_RAG技术 | 知识库搭建 |
+| 实战 | 09_部署推理 | 部署、量化、优化 |
+| 拓展 | 10_前沿动态 | 最新模型、行业新闻 |
+| 拓展 | 11_资源汇总 | 工具、论文、项目 |
+| 拓展 | 12_应用案例 | 实际应用场景 |
 
 ---
 
@@ -124,16 +71,13 @@ git clone https://github.com/gotonote/GPT-Notes.git
 
 # 进入目录
 cd GPT-Notes
-
-# 查看目录结构
-ls -la
 ```
 
 ---
 
 ## 🤝 贡献指南
 
-欢迎提交 PR！请先阅读 [文章撰写规范](./文章撰写规范.md)。
+欢迎提交 PR！
 
 ```bash
 # 1. Fork 仓库
@@ -153,8 +97,10 @@ git push origin main
 
 | 日期 | 内容 |
 |------|------|
+| 2026-02-18 | 目录结构整理为12个由浅入深的目录 |
+| 2026-02-17 | 添加注意力机制优化技术 |
+| 2026-02-16 | 添加 QLoRA 微调实战 |
 | 2026-02-15 | 添加 Fine-tuning/RAG/部署/行业应用 |
-| 2026-02-14 | 添加实战案例 |
 | 2026-02-14 | 初始化项目 |
 
 ---
