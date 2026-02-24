@@ -1,245 +1,203 @@
-# 5.1 llama2结构
+# 基础概念
 
+本文档介绍大模型学习过程中需要掌握的基本术语和核心概念，适合初学者入门阅读。
 
-与transformer不同，llama2采用了前置层归一化（pre-normalization）并使用RMSNorm归一化函数、激活函数更换为SwiGLU，使用了旋转位置编码，transformer结构与GPT-2相似，如下图：
+---
 
+## 1. 什么是大语言模型（LLM）
 
-<div align=center>
-<img src="./imgs/1.jpg" width="600" height="600">
-</div>
-<div align=center>图1.llama2结构 </div>
+**大语言模型**（Large Language Model，简称 LLM）是一种经过大规模文本数据训练的人工智能模型，能够理解和生成人类语言。
 
+简单来说，LLM 就像一个"超级阅读者"，它阅读了海量的书籍、网页、代码等文本，学会了理解和生成文字的能力。
 
-接下来，分别介绍RMSNorm归一化函数、SwiGLU激活函数和RoPE的具体内容和实现。
+### LLM 的核心能力
 
+| 能力 | 说明 |
+|------|------|
+| **文本生成** | 根据提示续写文章、回答问题、创作内容 |
+| **理解理解** | 理解用户意图，提取关键信息 |
+| **翻译转换** | 语言翻译、格式转换、代码编写 |
+| **逻辑推理** | 进行简单的数学计算和逻辑分析 |
 
-## 5.1.1 RMSNorm归一化函数
+---
 
+## 2. 基本术语
 
-为了使模型训练过程更加稳定，GPT-2相较于GPT引入了前置层归一化方法，将第一个层归一化移动到多头自注意力之前，将第二个层归一化移动到全连接层之前。同时，残差连接的位置调整到多头自注意力层与全连接层之后。层归一化中也采用了RMSNorm归一化函数。针对输入向量 $a$ ，RMSNorm函数计算公式如下： $RMS(a) = \sqrt{Σ_{i=1}^n a_i^2/n}$ ， $\overline{a_i}=a_i/RMS(a)$ 。此外，RMSNorm还可以引入可学习的缩放因子 $g_i$ 和偏移参数 $b_i$ ，从而得到 $\overline{a_i}=a_i*g_i/RMS(a)+b_i$ 。
+### 2.1 Token（词元）
 
+**Token** 是模型处理文本的基本单位。一个 token 可以是一个单词、一个汉字、一个标点符号，或者一个子词（subword）。
 
-下面是HuggingFace的transformers库中RMSNorm的代码实现：
-
-
-```python
-class LlamaRMSNorm(nn.Module):
-    def __init__(self,hidden_size,eps=1e-6):
-        super().__init__()
-        self.weight=nn.Parameter(torch.ones(hidden_size))
-        self.variance_epsilon=eps#防止取倒数分母为0
-    def forward(self,hidden_states):
-        input_dtype=hidden_states.dtype
-        variance=hidden_states.to(torch.float32).pow(2).mean(-1,keepdim=True)
-        hidden_states=hidden_states*torch.rsqrt(variance+self.variance_epsilon)
-        return (self.weight*hidden_states).to(input_dtype)
+```
+示例句子："今天天气很好"
+可能被分割为：["今天", "天气", "很", "好"]
 ```
 
-## 5.1.2 SwiGLU激活函数
+**为什么要了解 Token？**
+- API 调用是按照 token 数量计费的
+- 模型有上下文长度限制，也是用 token 来衡量的
 
+### 2.2 Embedding（嵌入）
 
-在llama2中，全连接层使用带有SwiGLU激活函数的FFN的计算公式如下： $FFN_{SwiGLU}(x,W,V,W_2)=SwiGLU(x,W,V)W_2,SwiGLU(x,W,V)=Swish_β(xW) \otimes xV,Swish_β(x)=xσ(βx)$ 。Swish激活函数中取 $\beta=1$ 即是SiLU函数，部分llama2模型实现例如transformers库中，Swish激活函数被SiLU激活函数代替。
+**Embedding** 是将文字转换为数字向量（一组数字）的技术，它是模型理解文字含义的方式。
 
-
-## 5.1.3 旋转位置编码(RoPE,Rotary Position Embedding)
-
-旋转位置编码（Rotary Position Embedding，RoPE）是论文Roformer: Enhanced Transformer With Rotray Position Embedding 提出的一种能够将相对位置信息依赖集成到 self-attention 中并提升 transformer 架构性能的位置编码方式。LLaMA2、GLM 模型也是采用该位置编码方式。和相对位置编码相比，RoPE 具有更好的外推性(外推性是指大模型在训练时和预测时的输入长度不一致，导致模型的泛化能力下降的问题)。目前是大模型相对位置编码中应用最广的方式之一。
-
-
-首先定义一个长度为 $N$ 的输入序列为： $S_N={w_i}^N_{i=1}$ ，其中 $w_i$ 是输入序列中第 $i$ 个token，而输入序列 $S_N$ 对应的 embedding 表示为： $E_N={x_i}^N_{i=1}$ ，其中 $x_i$ 表示第 $i$ 个token $w_i$ 对应的 $d$ 维嵌入向量。接着在做 self-attention 之前，会用词嵌入向量计算 $q,k,v$ 向量同时加入位置信息，函数公式表达如下: $q_m=f_q(x_m,m),k_n=f_k(x_n,n),v_n=f_v(x_n,n)$ ，其中 $q_m$ 表示第 $m$ 个token对应的词向量 $x_m$ 集成位置信息 $m$ 之后的query向量。而 $k_n$ 和 $v_n$ 则表示第 $n$ 个token对应的词向量 $x_n$ 集成位置信息 $n$ 之后的key和value向量。而基于 transformer 的位置编码方法都是着重于构造一个合适的 $f\left( q,k,v \right)$ 函数形式。
-
-
-为了能利用上token之间的相对位置信息，假定query向量 $q_m$ 和key向量 $k_n$ 之间的内积操作可以被一个函数 $g$ 表示，该函数 $g$ 的输入是词嵌入向量 $x_m, x_n$ 和它们之间的相对位置 $m-n: \lt f_q(x_m,m),f_k(x_n,n) \gt =g(x_m,x_n,x-n)$ ，接下来的目标就是找到一个等价的位置编码方式，从而使得上述关系成立。假定现在词嵌入向量的维度是2维 $(d=2)$ ，这样就可以利用上2维平面上的向量的几何性质。llama2论文中提出了一个满足上述关系的 $f$ 和 $g$ 的形式如下： $f_q(x_m,m)=(W_qx_m)e^{imθ}，f_k(x_n,n)=(W_kx_n)e^{inθ} ，g(x_m,x_n,m-n)=Re[(W_qx_m)(W_kx_n)^{*}e^{i(m-n)θ}]$ ，这里面 $Re$ 表示复数的实部，*表示共轭复数。
-
-
-进一步地， $f_q$ 可以表示成下面的式子：
-
-
-$$ f_q(x_m,m)= \left[
- \begin{matrix}
-   cosmθ & -sinmθ \\
-   sinmθ & cosmθ \\
-  \end{matrix}
-  \right] \left[
- \begin{matrix}
-   W_q^{(1,1)} &  W_q^{(1,2)}\\
-   W_q^{(2,1)} &  W_q^{(2,2)}\\
-  \end{matrix}
-  \right] \left[
- \begin{matrix}
-   x_m^{(1)}\\
-   x_m^{(2)}\\
-  \end{matrix}
-  \right] = \left[
- \begin{matrix}
-   cosmθ & -sinmθ \\
-   sinmθ & cosmθ \\
-  \end{matrix}
-  \right] \left[
-  \begin{matrix}
-   q_m^{(1)}\\
-   q_m^{(2)}\\
-  \end{matrix}
-  \right]
-$$
-
-
-这里就是query向量乘以了一个旋转矩阵，因此称为旋转位置编码。同理，$f_k$ 可以表示成下面的式子：
-
-
-$$ f_k(x_n,n)= \left[
- \begin{matrix}
-   cosnθ & -sinnθ \\
-   sinnθ & cosnθ \\
-  \end{matrix}
-  \right] \left[
- \begin{matrix}
-   W_k^{(1,1)} &  W_k^{(1,2)}\\
-   W_k^{(2,1)} &  W_k^{(2,2)}\\
-  \end{matrix}
-  \right] \left[
- \begin{matrix}
-   x_n^{(1)}\\
-   x_n^{(2)}\\
-  \end{matrix}
-  \right] = \left[
- \begin{matrix}
-   cosnθ & -sinnθ \\
-   sinnθ & cosnθ \\
-  \end{matrix}
-  \right] \left[
-  \begin{matrix}
-   k_n^{(1)}\\
-   k_n^{(2)}\\
-  \end{matrix}
-  \right]
-$$
-
-
-最终 $g(x_m,x_n,m-n)$ 可以表示如下：
-
-
-$$ 
-g(x_m,x_n,m-n)= \left[
-\begin{matrix}
-q_m^{(1)} & q_m^{(2)} \\
-\end{matrix}
-\right] \left[
-\begin{matrix}
-cos((m-n)θ) & -sin((m-n)θ) \\
-sin((m-n)θ) & cos((m-n)θ) \\
-\end{matrix}
-\right] \left[
-\begin{matrix}
-k_n^{(1)}\\
-k_n^{(2)}\\
-\end{matrix}
-\right]
-$$
-
-
-以上公式推导仅需要欧拉公式和三角函数和角公式即可自行推导，具体过程详见知乎《一文看懂 LLaMA 中的旋转式位置编码》一文。将2维推广到任意维度，可以表示如下： $f_{q,k}(x_m,m)=R^d_{θ,m}W_{q,k}x_m$ 。内积满足线性叠加性，因此任意偶数维的RoPE都可以表示为二维情形的拼接，即：
-
-
-<div align=center>
-<img src="./imgs/2.jpg" width="700" height="400">
-</div>
-<div align=center>图2.多维RoPE </div>
-
-
-将 RoPE 应用到自注意力计算，可以得到包含相对位置信息的自注意力： $q_m^Tk_n=(R^d_{θ,m}W_qx_m)^T(R^d_{θ,n}W_kx_n)=x_m^TW_qR^d_{θ,n-m}W_kx_n$ ，其中， $R^d_{θ,n-m}=(R^d_{θ,m})^TR^d_{θ,n}$ 。由于 $R^d_{\Theta}$ 是一个正交矩阵，它不会改变向量的模长，因此不会改变原模型的稳定性。
-
-
-由于 $R^d_{\Theta,m}$ 的稀疏性，所以直接用矩阵乘法来实现会很浪费算力，通常逐元素相乘操作 $\otimes$ 来实现 RoPE：
-
-
-<div align=center>
-<img src="./imgs/3.jpg" width="800" height="400">
-</div>
-<div align=center>图3.高效计算RoPE </div>
-
-
-总结来说，RoPE的自注意力操作的流程是：对于token序列中的每个词嵌入向量，首先计算其对应的query和key向量，然后对每个token位置都计算对应的旋转位置编码，接着对每个token位置的 query和key向量的元素按照两两一组应用旋转变换，最后再计算query和key之间的内积得到自注意力的计算结果。下图展示了旋转变换的过程：
-
-
-<div align=center>
-<img src="./imgs/4.jpg" width="800" height="400">
-</div>
-<div align=center>图4.旋转变换过程 </div>
-
-
-RoPE具有很好的外推性，因为RoPE可以通过旋转矩阵来实现位置编码的外推，即可以通过旋转矩阵来生成超过预期训练长度的位置编码。这样可以提高模型的泛化能力和鲁棒性。回顾一下RoPE的工作原理：假设有一个 $d$ 维的绝对位置编码 $P_i$ ，其中 $i$ 是位置索引，将 $P_i$ 看成一个 $d$ 维空间中的一个点，定义一个 $d$ 维空间中的一个旋转矩阵 $R$ ，它可以将任意一个点沿着某个轴旋转一定的角度。用 $R$ 来变换 $P_i$ ，得到一个新的点 $Q_i=R*P_i$ 。可以发现， $Q_i$ 和 $P_i$ 的距离是相等的，即 $\left|\left| Q_i-P_i \right|\right| = 0$ 。这意味着 $Q_i$ 和 $P_i$ 的相对关系没有改变。但是， $Q_i$ 和 $P_j$ 的距离可能发生改变，即 $\left|\left| Q_i-P_j \right|\right| \ne \left|\left| P_i-P_j \right|\right|$ 。这意味着 $Q_i$ 和 $P_j$ 的相对关系有所改变。因此，我们可以用 $R$ 来调整不同位置之间的相对关系。
-
-
-如果想要生成超过预训练长度的位置编码，只需要用 $R$ 来重复变换最后一个预训练位置编码 $P_n$ ，得到新的位置编码 $Q_{n+1} = R * P_n ，Q_{n+2} = R * Q_{n+1} ， Q_{n+3} = R * Q_{n+2}$ ，依此类推。这样就可以得到任意长度的位置编码序列 $Q_1, Q_2, …, Q_m$ ，其中 $m$ 可以大于 $n$ 。由于 $R$ 是一个正交矩阵，它保证了 $Q_i$ 和  $Q_j$  的距离不会无限增大或缩小，而是在一个有限范围内波动。这样就可以避免数值溢出或下溢的问题。同时，由于 $R$ 是一个可逆矩阵，它保证了 $Q_i$ 和 $Q_j$ 的距离可以通过 $R$ 的逆矩阵 $R^{-1}$ 还原到 $P_i$ 和 $P_j$ 的距离，即 $||R^{-1} * Q_i - R^{-1} * Q_j|| = ||P_i - P_j||$ 。这样就可以保证位置编码的可逆性和可解释性。
-
-
-RoPE代码实现如下所示：
-
-
-```python
-# 生成旋转矩阵
-def precompute_freqs_cis(dim: int, seq_len: int, theta: float = 10000.0):
-    # 计算词向量元素两两分组之后，每组元素对应的旋转角度\theta_i
-    freqs = 1.0 / (theta ** (torch.arange(0, dim, 2)[: (dim // 2)].float() / dim))
-    # 生成 token 序列索引 t = [0, 1,..., seq_len-1]
-    t = torch.arange(seq_len, device=freqs.device)
-    # freqs.shape = [seq_len, dim // 2] 
-    freqs = torch.outer(t, freqs).float()  # 计算m * \theta
-
-    # 计算结果是个复数向量
-    # 假设 freqs = [x, y]
-    # 则 freqs_cis = [cos(x) + sin(x)i, cos(y) + sin(y)i]
-    freqs_cis = torch.polar(torch.ones_like(freqs), freqs) 
-    return freqs_cis
-
-# 旋转位置编码计算
-def apply_rotary_emb(
-    xq: torch.Tensor,
-    xk: torch.Tensor,
-    freqs_cis: torch.Tensor,
-) -> Tuple[torch.Tensor, torch.Tensor]:
-    # xq.shape = [batch_size, seq_len, dim]
-    # xq_.shape = [batch_size, seq_len, dim // 2, 2]
-    xq_ = xq.float().reshape(*xq.shape[:-1], -1, 2)
-    xk_ = xk.float().reshape(*xk.shape[:-1], -1, 2)
-    
-    # 转为复数域
-    xq_ = torch.view_as_complex(xq_)
-    xk_ = torch.view_as_complex(xk_)
-    
-    # 应用旋转操作，然后将结果转回实数域
-    # xq_out.shape = [batch_size, seq_len, dim]
-    xq_out = torch.view_as_real(xq_ * freqs_cis).flatten(2)
-    xk_out = torch.view_as_real(xk_ * freqs_cis).flatten(2)
-    return xq_out.type_as(xq), xk_out.type_as(xk)
-
-class Attention(nn.Module):
-    def __init__(self, args: ModelArgs):
-        super().__init__()
-
-        self.wq = Linear(...)
-        self.wk = Linear(...)
-        self.wv = Linear(...)
-        
-        self.freqs_cis = precompute_freqs_cis(dim, max_seq_len * 2)
-
-    def forward(self, x: torch.Tensor):
-        bsz, seqlen, _ = x.shape
-        xq, xk, xv = self.wq(x), self.wk(x), self.wv(x)
-
-        xq = xq.view(batch_size, seq_len, dim)
-        xk = xk.view(batch_size, seq_len, dim)
-        xv = xv.view(batch_size, seq_len, dim)
-
-        # attention 操作之前，应用旋转位置编码
-        xq, xk = apply_rotary_emb(xq, xk, freqs_cis=freqs_cis)
-        
-        # scores.shape = (bs, seqlen, seqlen)
-        scores = torch.matmul(xq, xk.transpose(1, 2)) / math.sqrt(dim)
-        scores = F.softmax(scores.float(), dim=-1)
-        output = torch.matmul(scores, xv)  # (batch_size, seq_len, dim)
-  # ......
+```
+文字 → 数字向量
+"猫"   → [0.12, -0.34, 0.56, ...]
+"狗"   → [0.11, -0.32, 0.58, ...]   # 与"猫"的向量比较接近
+"汽车" → [0.89, 0.12, -0.45, ...]  # 与"猫"的向量相差较远
 ```
 
-##
+### 2.3 参数（Parameters）
+
+**参数**是模型在训练过程中学习到的"知识"，通常用"有多少亿参数"来描述模型的大小。
+
+- **参数越多**，通常意味着模型越强大，但需要更多的计算资源
+- 常见模型参数规模：7B（70亿）、13B、70B、100B+ 等
+
+### 2.4 上下文长度（Context Length）
+
+**上下文长度**是指模型一次能处理的 token 数量上限。
+
+- 超过这个长度，早期的内容可能被"遗忘"
+- 较长的上下文允许模型处理更长的文档、代码
+
+---
+
+## 3. 模型相关概念
+
+### 3.1 预训练（Pretraining）
+
+**预训练**是大模型学习"语言能力"的阶段，就像学生的基础教育阶段。
+
+在这个阶段，模型通过阅读海量文本，学会：
+- 语言的语法和结构
+- 世界的常识知识
+- 基本的推理能力
+
+### 3.2 微调（Fine-tuning）
+
+**微调**是在预训练模型基础上，用特定数据进行进一步训练，使模型适应特定任务。
+
+```
+预训练模型：通用知识 → 微调 → 特定领域专家
+（如：ChatGPT）    （如：医疗助手、法律顾问）
+```
+
+### 3.3 对齐（Alignment）
+
+**对齐**是指让模型的输出符合人类价值观和期望，避免产生有害内容。
+
+常见的对齐技术：
+- RLHF（基于人类反馈的强化学习）
+- DPO（直接偏好优化）
+
+---
+
+## 4. 推理参数
+
+### 4.1 Temperature（温度）
+
+**Temperature** 控制输出的随机性：
+
+| 值 | 效果 |
+|----|------|
+| **低（0.1-0.3）** | 输出更确定性，重复性高 |
+| **中（0.7-1.0）** | 平衡创造性和确定性 |
+| **高（>1.0）** | 输出更随机、更有创意 |
+
+简单理解：温度越高，模型越"随机应变"；温度越低，模型越"保守稳定"。
+
+### 4.2 Top-P（核采样）
+
+**Top-P** 是另一种控制随机性的参数。
+
+它表示模型只从概率最高的 P 比例的候选词中选择：
+
+```
+Top-P = 0.9：只从累计概率达90%的词中选择
+Top-P = 0.99：选择范围更大，更随机
+```
+
+### 4.3 Top-K
+
+**Top-K** 限制模型只考虑概率最高的 K 个词：
+
+```
+Top-K = 1：始终选择最可能的词（最确定性）
+Top-K = 50：考虑概率最高的50个词
+```
+
+---
+
+## 5. 模型架构
+
+### 5.1 Transformer
+
+**Transformer** 是现代大模型的核心架构，几乎所有主流大模型都基于 Transformer。
+
+```
+Transformer = 编码器(Encoder) + 解码器(Decoder)
+```
+
+### 5.2 Decoder-Only（纯解码器）
+
+目前大多数对话模型采用的架构，如 GPT 系列、LLaMA 等。
+
+特点：单向注意力，只能看到前面的内容
+
+### 5.3 Encoder-Decoder（编码器-解码器）
+
+如 T5、BART 等模型架构。
+
+特点：双向注意力，可以同时看到前后内容
+
+---
+
+## 6. 常见模型类型
+
+| 类型 | 代表模型 | 特点 |
+|------|----------|------|
+| **通用对话** | GPT-4、Claude、 Gemini | 通用能力强 |
+| **开源模型** | LLaMA、Qwen、DeepSeek | 可本地部署 |
+| **代码模型** | CodeLlama、DeepSeek-Coder | 编程能力强 |
+| **多模态模型** | GPT-4V、Claude 3 | 支持图像理解 |
+
+---
+
+## 7. 性能评估指标
+
+### 7.1 困惑度（Perplexity）
+
+衡量模型对文本的"困惑"程度，**越低越好**。
+
+### 7.2 BLEU / ROUGE
+
+机器翻译和文本生成常用的评估指标。
+
+### 7.3 MMLU / C-Eval
+
+大模型知识推理能力的基准测试。
+
+---
+
+## 8. 总结
+
+| 概念 | 核心要点 |
+|------|----------|
+| Token | 模型处理的最小单位 |
+| Embedding | 文字的数字表示 |
+| 参数 | 模型大小的衡量标准 |
+| 预训练 | 学习通用语言能力 |
+| 微调 | 适应特定任务 |
+| Temperature | 控制输出随机性 |
+
+---
+
+## 📎 相关资源
+
+- [01_入门指引](../01_入门指引/) - 了解大模型发展历程
+- [03_技术原理](../03_技术原理/) - 深入学习 Transformer 架构
+
+---
+
+*📝 更新日期：2026-02-24*
